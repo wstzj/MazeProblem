@@ -19,7 +19,7 @@ typedef struct Node {
 
 void ReadMap() {
 
-    char pass[102] = "";
+    char pass[102] ="";
     char *line = NULL, *record;
     FILE *fp = fopen(".\\map.csv", "r+");
 
