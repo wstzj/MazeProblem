@@ -1,44 +1,106 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include "Stack.h"
 
-#define MaxSize 100
+#define MaxSize 102
 
 char Map[MaxSize][MaxSize];
-int x_size = 0, y_size = 0;//ç”¨äºè®°å½•è¿·å®«å¤§å°
+int Mark[MaxSize][MaxSize] = {0};
+int x_size = 0, y_size = 0;//ÓÃÓÚ¼ÇÂ¼ÃÔ¹¬´óĞ¡
+int x_start, y_start;//Æğµã×ø±ê
+int x_end, y_end;//ÖÕµã×ø±ê
 
-enum directions {
-    East = 1, South, West, North
-};//ä¸œå—è¥¿åŒ—å››ä¸ªæ–¹å‘æ•°æ®åŒ–
+Stack *SaveStack = NULL;//¼ÇÂ¼Â·¾¶
+Stack *SaveStackTop = NULL;//¼ÇÂ¼Â·¾¶Õ»¶¥
 
-typedef struct Node {
-    int x;//æ¨ªåæ ‡
-    int y;//çºµåæ ‡
-    int direction;//ä¸‹ä¸€æ­¥çš„æ–¹å‘
-} Node;//è¾“å‡ºçš„ä¸‰å…ƒç»„
+Stack *RecordStack = NULL;//ÁÙÊ±Õ»
+Stack *RecordStackTop = NULL;//ÁÙÊ±Õ»¶¥
 
+int direction_x[4] = {0, -1, 0, 1};
+int direction_y[4] = {-1, 0, 1, 0};//ËÄ¸ö·½Ïò£¬×óÉÏÓÒÏÂ£»
+
+/*
+ * ´Ócsv¶ÁÈ¡µØÍ¼ĞÅÏ¢
+ */
 void ReadMap() {
 
-    char pass[102] ="";
+    char pass[256] = "";
     char *line = NULL, *record;
     FILE *fp = fopen(".\\map.csv", "r+");
 
     if (fp != NULL) {
-        fgets(pass, 101, fp);//è·³è¿‡ç¬¬ä¸€è¡Œ,ç¬¬ä¸€è¡Œæ˜¯äºŒè¿›åˆ¶å¤´
-        fgets(pass, 101, fp);//è·³è¿‡ç¬¬äºŒè¡Œ,ç¬¬äºŒè¡Œæ˜¯mapè¾¹æ¡†
-        fseek(fp, 2, SEEK_CUR);//è·³è¿‡ç¬¬ä¸€åˆ—ï¼Œç¬¬ä¸€åˆ—æ˜¯mapè¾¹æ¡†
-        while ((line = fgets(pass, sizeof(pass), fp)) != NULL)//å½“æ²¡æœ‰è¯»å–åˆ°æ–‡ä»¶æœ«å°¾æ—¶å¾ªç¯ç»§ç»­
+        fgets(pass, 255, fp);//Ìø¹ıµÚÒ»ĞĞ,µÚÒ»ĞĞÊÇ¶ş½øÖÆÍ·
+//        fgets(pass, 101, fp);//Ìø¹ıµÚ¶şĞĞ,µÚ¶şĞĞÊÇmap±ß¿ò
+//        fseek(fp, 2, SEEK_CUR);//Ìø¹ıµÚÒ»ÁĞ£¬µÚÒ»ÁĞÊÇmap±ß¿ò
+        while ((line = fgets(pass, sizeof(pass), fp)) != NULL)//µ±Ã»ÓĞ¶ÁÈ¡µ½ÎÄ¼şÄ©Î²Ê±Ñ­»·¼ÌĞø
         {
-            fseek(fp, 2, SEEK_CUR);//è·³è¿‡ç¬¬ä¸€åˆ—ï¼Œç¬¬ä¸€åˆ—æ˜¯mapè¾¹æ¡†
-            record = strtok(line, ",");//ä»¥é€—å·å°†æ¯ä¸ªæ•°åˆ†å‰²
+            //fseek(fp, 2, SEEK_CUR);//Ìø¹ıµÚÒ»ÁĞ£¬µÚÒ»ÁĞÊÇmap±ß¿ò
+            record = strtok(line, ",");//ÒÔ¶ººÅ½«Ã¿¸öÊı·Ö¸î
             x_size = 0;
-            while (record != NULL)//è¯»å–æ¯ä¸€è¡Œçš„æ•°æ®
+            while (record != NULL)//¶ÁÈ¡Ã¿Ò»ĞĞµÄÊı¾İ
             {
-                Map[y_size][x_size] = record[0];
+                Map[y_size][x_size] = record[0];//½«Ã¿¸öµã´æÈëÊı×é
                 x_size++;
-                record = strtok(NULL, ",");//å¯»æ‰¾ä¸‹ä¸€ä¸ªè¢«åˆ†éš”çš„å­—ç¬¦ä¸²
+                record = strtok(NULL, ",");//Ñ°ÕÒÏÂÒ»¸ö±»·Ö¸ôµÄ×Ö·û´®
             }
             y_size++;
+        }
+        x_size = x_size - 2;//¼õÈ¥µÚÒ»ÁĞÓë×îºóÒ»ÁĞ±ß¿ò
+        y_size = y_size - 2;//¼õÈ¥µÚÒ»ĞĞÓë×îºóÒ»ĞĞ±ß¿ò
+    }
+
+}
+
+/*
+ * int x ºá×ø±ê
+ * int y ×İ×ø±ê
+ * int direction ·½Ïò Ïê¼û directions
+ * */
+void dfs(int x, int y) {
+
+    if (x == x_end && y == y_end)//ËÑÑ°³É¹¦Ê±Êä³ö½á¹û
+    {
+        Node *p1 = (Node *) malloc(sizeof(Node));
+        p1->x = x;
+        p1->y = y;
+        p1->direction = 0;
+        SaveStack = push(SaveStack, p1, &SaveStackTop);
+        while (isEmpty(SaveStack)) {
+            Node *p = SaveStackTop->data;
+            RecordStack = push(RecordStack, p, &RecordStackTop);
+            SaveStack = pop(SaveStack, &SaveStackTop);
+        }
+        while (isEmpty(RecordStack)) {
+            Node *p = RecordStackTop->data;
+            SaveStack = push(SaveStack, p, &SaveStackTop);//»ØËİÓÃ
+            RecordStack = pop(RecordStack, &RecordStackTop);
+            printf("(%d,%d,%d)", p->x, p->y, p->direction);
+        }
+        SaveStack = pop(SaveStack, &SaveStackTop);
+        printf("\n");
+        return;
+    }
+    if (x < 1 || x > x_size || y < 1 || y > y_size)//Ô½½ç¾Í»ØËİ
+        return;
+    for (int i = 0; i < 4; i++) {
+        int next_x = x + direction_x[i];
+        int next_y = y + direction_y[i];
+        if (0 < next_x && next_x <= x_size
+            && 0 < next_y && next_y <= y_size
+            && Map[next_y][next_x] == '0' && Mark[next_y][next_x] == 0) {
+
+            Mark[next_y][next_x] = 1;
+            Node *p = (Node *) malloc(sizeof(Node));
+            p->x = x;
+            p->y = y;
+            p->direction = 0;
+            SaveStack = push(SaveStack, p, &SaveStackTop);
+
+            dfs(next_x, next_y);
+
+            Mark[next_y][next_x] = 0;
+            SaveStack = pop(SaveStack, &SaveStackTop);
         }
     }
 }
@@ -47,7 +109,30 @@ void ReadMap() {
 int main() {
 
     ReadMap();
-    fflush(stdout);
+
+    while (1) {
+        printf("ÇëÊäÈëÆğµã£¬ÊäÈë¸ñÊ½£º×ø±êx ×ø±êy\n");
+        scanf("%d %d", &x_start, &y_start);
+        if ((x_start < 0 && x_start >= x_size) &&
+            (y_start < 0 && y_start >= y_size))
+            printf("ÆğµãÔ½½ç\n");
+        else if (Map[y_start][x_start] != '0')
+            printf("¸Ãµã²»ÄÜ×÷ÎªÒ»¸öÆğµã\n");
+        else break;
+    }
+    Mark[y_start][x_start] = 1;
+    while (1) {
+        printf("ÇëÊäÈëÖÕµã£¬ÊäÈë¸ñÊ½£º×ø±êx ×ø±êy\n");
+        scanf("%d %d", &x_end, &y_end);
+        if ((x_end < 0 && x_end >= x_size) &&
+            (y_start < 0 && y_start >= y_size))
+            printf("ÖÕµãÔ½½ç\n");
+        else if (Map[y_end][x_end] != '0')
+            printf("¸Ãµã²»ÄÜ×÷ÎªÒ»¸öÖÕµã\n");
+        else break;
+    }
+    dfs(x_start, y_start);
+
     return 0;
 
 }
