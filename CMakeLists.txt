@@ -3,4 +3,4 @@ project(MazeProblem C)
 
 set(CMAKE_C_STANDARD 99)
 
-add_executable(MazeProblem main.c)
+add_executable(MazeProblem main.c Stack.h)
