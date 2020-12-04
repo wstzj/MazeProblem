@@ -13,7 +13,7 @@
 typedef struct Node {
     int x;//横坐标
     int y;//纵坐标
-    int direction;//下一步的方向
+    char *direction;//下一步的方向
 } Node;//输出的三元组
 
 typedef struct Stack {

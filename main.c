@@ -10,7 +10,6 @@ int Mark[MaxSize][MaxSize] = {0};
 int x_size = 0, y_size = 0;//用于记录迷宫大小
 int x_start, y_start;//起点坐标
 int x_end, y_end;//终点坐标
-
 Stack *SaveStack = NULL;//记录路径
 Stack *SaveStackTop = NULL;//记录路径栈顶
 
@@ -19,6 +18,10 @@ Stack *RecordStackTop = NULL;//临时栈顶
 
 int direction_x[4] = {0, -1, 0, 1};
 int direction_y[4] = {-1, 0, 1, 0};//四个方向，左上右下；
+
+enum directions{
+    South = 0, West, North, East
+};
 
 /*
  * 从csv读取地图信息
@@ -75,7 +78,7 @@ void dfs(int x, int y) {
             Node *p = RecordStackTop->data;
             SaveStack = push(SaveStack, p, &SaveStackTop);//回溯用
             RecordStack = pop(RecordStack, &RecordStackTop);
-            printf("(%d,%d,%d)", p->x, p->y, p->direction);
+            printf("(%d,%d,%s)->", p->x, p->y, p->direction);
         }
         SaveStack = pop(SaveStack, &SaveStackTop);
         printf("\n");
@@ -84,7 +87,7 @@ void dfs(int x, int y) {
     if (x < 1 || x > x_size || y < 1 || y > y_size)//越界就回溯
         return;
     for (int i = 0; i < 4; i++) {
-        int next_x = x + direction_x[i];
+        int next_x = x + direction_x[i];//跟据i的值+1 +0 +
         int next_y = y + direction_y[i];
         if (0 < next_x && next_x <= x_size
             && 0 < next_y && next_y <= y_size
@@ -94,7 +97,21 @@ void dfs(int x, int y) {
             Node *p = (Node *) malloc(sizeof(Node));
             p->x = x;
             p->y = y;
-            p->direction = 0;
+            switch (i) {
+                case East:
+                    p->direction = "→";
+                    break;
+                case South:
+                    p->direction = "↓";
+                    break;
+                case West:
+                    p->direction = "←";
+                    break;
+                case North:
+                    p->direction = "↑";
+                    break;
+
+            }
             SaveStack = push(SaveStack, p, &SaveStackTop);
 
             dfs(next_x, next_y);
