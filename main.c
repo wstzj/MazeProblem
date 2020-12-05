@@ -57,8 +57,9 @@ void ReadMap() {
 
 /*
  * int x 横坐标
+ *
  * int y 纵坐标
- * */
+ */
 void dfs(int x, int y) {
 
     if (x == x_end && y == y_end)//搜寻成功时输出结果
@@ -102,8 +103,7 @@ void dfs(int x, int y) {
             Node *p = (Node *) malloc(sizeof(Node));
             p->x = x;
             p->y = y;
-            switch (i) //下一步的方向,并存入链表
-            {
+            switch (i) { //下一步的方向,并存入链表
                 case East:
                     p->direction = "→";
                     break;

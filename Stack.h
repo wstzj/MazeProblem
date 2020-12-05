@@ -21,7 +21,6 @@ typedef struct Stack {
     struct Stack *nextNode;
 } Stack;//栈本体
 
-
 //初始化栈
 Stack *init(Stack *stack, Node *data) {
     stack = (Stack *) malloc(sizeof(Stack));
