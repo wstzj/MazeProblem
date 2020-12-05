@@ -24,7 +24,7 @@ typedef struct Stack {
 
 //初始化栈
 Stack *init(Stack *stack, Node *data) {
-    stack = (Stack *)malloc(sizeof(Stack));
+    stack = (Stack *) malloc(sizeof(Stack));
     stack->data = data;
     stack->nextNode = NULL;
     return stack;
@@ -56,7 +56,7 @@ Stack *push(Stack *head, Node *data, Stack **top) {
 }
 
 //弹出栈顶
-Stack * pop(Stack *head, Stack **top) {
+Stack *pop(Stack *head, Stack **top) {
     if (!isEmpty(head)) {
         return head;
     }
