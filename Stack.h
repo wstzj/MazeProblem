@@ -13,7 +13,7 @@
 typedef struct Node {
     int x;//横坐标
     int y;//纵坐标
-    char *direction;//下一步的方向
+    int direction;//下一步的方向
 } Node;//输出的三元组
 
 typedef struct Stack {
@@ -73,6 +73,16 @@ Stack *pop(Stack *head, Stack **top) {
     *top = p;
     free(loop);
     p->nextNode = NULL;
+    return head;
+}
+
+Stack *clear(Stack *head, Stack **top) {
+    if (!isEmpty(head)) {
+        return head;
+    }
+    while (isEmpty(head)) {
+        head = pop(head, top);
+    }
     return head;
 }
 
